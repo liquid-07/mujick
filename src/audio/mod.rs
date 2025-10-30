@@ -6,3 +6,5 @@ pub mod scanner;
 pub use scanner::scan_audio;
 
 pub use audio_file::AudioDetails;
+
+pub use audio_type::AudioType;

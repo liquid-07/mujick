@@ -12,9 +12,11 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 
-use crate::gui::play_area::play_area;
+use crate::gui::control::SelectedArea;
+use crate::gui::control::handel_controls;
 use crate::gui::song_area::song_area;
 use crate::gui::song_tab::SelectedTab;
+use crate::gui::{control, play_area::play_area};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::style::Modifier;
 use ratatui::style::palette::tailwind::SLATE;
@@ -38,12 +40,13 @@ pub async fn init() -> Result<()> {
 }
 
 pub struct AppState {
-    should_exit: bool,
-    music_view_list: Vec<String>,
-    music_view_selected_index: usize,
-    items: Vec<String>,
-    left_area: Rect,
+    pub should_exit: bool,
+    pub is_playing: bool,
+    pub selected_area: SelectedArea,
+    pub music_filter_type: Vec<String>,
+    pub music_filter_type_index: usize,
     pub selected_tab: SelectedTab,
+    pub selected_music_index: usize
 }
 
 fn init_terminal() -> Result<DefaultTerminal> {
@@ -63,9 +66,12 @@ fn restore_terminal() -> Result<()> {
 
 fn run(mut app: DefaultTerminal) -> Result<()> {
     let mut application_state = AppState {
-        selected_tab:SelectedTab::Tab1,
+        selected_tab: SelectedTab::Tab1,
+        selected_area: SelectedArea::LeftArea,
+        is_playing: false,
         should_exit: false,
-        music_view_list: vec![
+        music_filter_type: vec![
+            "All".to_string(),
             "Artist".to_string(),
             "Album".to_string(),
             "Playlist".to_string(),
@@ -73,14 +79,14 @@ fn run(mut app: DefaultTerminal) -> Result<()> {
             "Genre".to_string(),
             "Unknown".to_string(),
         ],
-        music_view_selected_index: 0,
-        items: (0..50).map(|i| format!("Item {}", i)).collect(),
-        left_area: Rect::default(),
+        music_filter_type_index: 0,
+        selected_music_index:0
     };
     while !application_state.should_exit {
         app.draw(|f| render_frame(f, &mut application_state))?;
         if let Event::Key(key) = event::read()? {
-            handle_key(key, &mut application_state);
+            control::handel_controls(key, &mut application_state);
+            // handle_key(key, &mut application_state);
         };
     }
     Ok(())
@@ -93,16 +99,16 @@ fn handle_key(key: KeyEvent, app_state: &mut AppState) {
     match key.code {
         KeyCode::Char('q') | KeyCode::Esc => app_state.should_exit = true,
         KeyCode::Down => {
-            log::info!("the index is {}", app_state.music_view_selected_index);
-            if app_state.music_view_selected_index == app_state.music_view_list.len() - 1 {
-                app_state.music_view_selected_index = 0;
+            log::info!("the index is {}", app_state.music_filter_type_index);
+            if app_state.music_filter_type_index == app_state.music_filter_type.len() - 1 {
+                app_state.music_filter_type_index = 0;
             } else {
-                app_state.music_view_selected_index = app_state.music_view_selected_index + 1;
+                app_state.music_filter_type_index = app_state.music_filter_type_index + 1;
             }
         }
         KeyCode::Up => {
-            if app_state.music_view_selected_index > 0 {
-                app_state.music_view_selected_index = app_state.music_view_selected_index - 1;
+            if app_state.music_filter_type_index > 0 {
+                app_state.music_filter_type_index = app_state.music_filter_type_index - 1;
             }
         }
         KeyCode::Left => app_state.selected_tab = app_state.selected_tab.previous(),
@@ -136,7 +142,7 @@ fn render_left(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
         layout[0],
     );
     let music_view_item: Vec<ListItem> = app
-        .music_view_list
+        .music_filter_type
         .iter()
         .map(|i| {
             ListItem::new(vec![
@@ -158,7 +164,7 @@ fn render_left(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
         .highlight_style(SELECTED_STYLE)
         .highlight_symbol(">> ");
     let mut list_state = ListState::default();
-    list_state.select(Some(app.music_view_selected_index));
+    list_state.select(Some(app.music_filter_type_index));
     f.render_stateful_widget(list, layout[1], &mut list_state);
 
     let dev_line = Line::from(vec![Span::styled(
@@ -174,7 +180,7 @@ fn render_left(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
 }
 
 fn render_right(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
-    let selected = &app.music_view_list[app.music_view_selected_index];
+    let selected = &app.music_filter_type[app.music_filter_type_index];
     let content = format!("Details for {}\n\nThis is where more info goes.", selected);
 
     let paragraph = Paragraph::new(content)

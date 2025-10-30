@@ -6,7 +6,7 @@ pub struct AudioError {
 }
 
 impl Display for AudioError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {                                                                                                          
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.error)
     }
 }

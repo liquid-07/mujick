@@ -1,4 +1,3 @@
-
 use crate::gui::gui::AppState;
 use crate::gui::song_tab::SelectedTab;
 use ratatui::Frame;

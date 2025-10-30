@@ -1,5 +1,4 @@
 //find all music in computer
-
 use crate::audio::AudioDetails;
 use crate::audio::audio_error::AudioError;
 use crate::audio::audio_type::AudioType;

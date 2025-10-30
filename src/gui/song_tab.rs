@@ -1,11 +1,16 @@
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Color, Widget};
-use ratatui::style::{Style, Stylize};
 use ratatui::style::palette::tailwind;
+use ratatui::style::{Style, Stylize};
 use ratatui::symbols;
 use ratatui::text::Line;
-use ratatui::widgets::{Block, Borders, Padding, Paragraph};
+use std::path::PathBuf;
+
+use crate::audio::{AudioDetails, AudioType};
+use crate::gui::song_view::SongView;
+use ratatui::widgets::StatefulWidget;
+use ratatui::widgets::{Block, Borders, ListState, Padding, Paragraph};
 use strum::{Display, EnumIter, FromRepr, IntoEnumIterator};
 
 #[derive(Default, Clone, Copy, Display, FromRepr, EnumIter)]
@@ -51,16 +56,21 @@ impl SelectedTab {
             .into()
     }
 
+    pub fn render_tab0(self, area: Rect, buf: &mut Buffer) {
+        let songs = get_dummy_audio_details();
+        let song_view: SongView = SongView::new(&songs, 0);
+        let mut list_state = ListState::default();
+        list_state.select(Some(0));
+        song_view.render(area, buf, &mut list_state);
+        // Paragraph::new("i will put all songs here ")
+        //     .block(Block::default().title("songs").borders(Borders::ALL))
+        //     .style(Style::default().fg(Color::White))
+        //     .render(area, buf);
+    }
+
     pub fn render_tab1(self, area: Rect, buf: &mut Buffer) {
         Paragraph::new("try to do http call to get the lyrics")
             .block(Block::default().title("lyrics").borders(Borders::ALL))
-            .style(Style::default().fg(Color::White))
-            .render(area, buf);
-    }
-
-    pub fn render_tab0(self, area: Rect, buf: &mut Buffer) {
-        Paragraph::new("i will put all songs here ")
-            .block(Block::default().title("songs").borders(Borders::ALL))
             .style(Style::default().fg(Color::White))
             .render(area, buf);
     }
@@ -80,4 +90,79 @@ impl SelectedTab {
             _ => tailwind::BLUE,
         }
     }
+}
+
+pub fn get_dummy_audio_details() -> Vec<AudioDetails> {
+    vec![
+        AudioDetails::new(
+            PathBuf::from("/music/Daft Punk - Get Lucky.mp3"),
+            AudioType::Mp3,
+            "Get Lucky".into(),
+            "Daft Punk".into(),
+            "Random Access Memories".into(),
+            "Electronic".into(),
+            "Grammy-winning hit".into(),
+            369.0, // 6:09
+            Some(44100),
+            Some(16),
+            Some(2),
+            2013,
+        ),
+        AudioDetails::new(
+            PathBuf::from("/music/Adele - Hello.flac"),
+            AudioType::Flac,
+            "Hello".into(),
+            "Adele".into(),
+            "25".into(),
+            "Pop".into(),
+            "Emotional ballad".into(),
+            295.0, // 4:55
+            Some(48000),
+            Some(24),
+            Some(2),
+            2015,
+        ),
+        AudioDetails::new(
+            PathBuf::from("/music/Imagine Dragons - Believer.wav"),
+            AudioType::Wav,
+            "Believer".into(),
+            "Imagine Dragons".into(),
+            "Evolve".into(),
+            "Rock".into(),
+            "Energetic rock anthem".into(),
+            204.0, // 3:24
+            Some(44100),
+            Some(16),
+            Some(2),
+            2017,
+        ),
+        AudioDetails::new(
+            PathBuf::from("/music/The Weeknd - Blinding Lights.ogg"),
+            AudioType::Ogg,
+            "Blinding Lights".into(),
+            "The Weeknd".into(),
+            "After Hours".into(),
+            "Synthwave".into(),
+            "Retro 80s vibe".into(),
+            200.0, // 3:20
+            Some(44100),
+            Some(16),
+            Some(2),
+            2020,
+        ),
+        AudioDetails::new(
+            PathBuf::from("/music/Taylor Swift - Cardigan.aac"),
+            AudioType::Aac,
+            "Cardigan".into(),
+            "Taylor Swift".into(),
+            "Folklore".into(),
+            "Indie Pop".into(),
+            "Soft and introspective".into(),
+            239.0, // 3:59
+            Some(44100),
+            Some(16),
+            Some(2),
+            2020,
+        ),
+    ]
 }
