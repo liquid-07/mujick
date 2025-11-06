@@ -13,8 +13,9 @@ pub enum AudioType {
 }
 
 impl AudioType {
-    pub fn from_path(path: &Path) -> Self {
-        match path
+    pub fn from_path(path: &String) -> Self {
+        let audio_path = Path::new(path);
+        match audio_path
             .extension()
             .and_then(|e| e.to_str().map(|s| s.to_lowercase()))
         {

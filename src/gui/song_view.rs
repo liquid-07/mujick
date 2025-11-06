@@ -5,13 +5,14 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget};
+use serde::{Deserialize, Serialize};
 
 ///This view will contain song details
 ///  'apple'
 pub struct SongView<'a> {
     audio_details_list: &'a [AudioDetails],
     selected: usize,
-}
+} 
 
 const SELECTED_STYLE: Style = Style::new()
     .bg(Color::White)

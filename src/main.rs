@@ -10,7 +10,9 @@ mod audio;
 mod database;
 
 mod gui;
+use crate::database::repository;
 use flexi_logger::{Logger, WriteMode};
+// use crate::audio;
 
 #[tokio::main]
 pub async fn main() {
@@ -24,30 +26,29 @@ pub async fn main() {
                 .basename("application")
                 .suffix("log"),
         )
-        // .duplicate_to_stdout(Duplicate::Info)
+        //.duplicate_to_stdout(Duplicate::Info)
         .write_mode(WriteMode::BufferAndFlush) // or .Direct
         .start()
         .unwrap();
     // Logger::with_S
     log::info!("Logger initialized and writing to .log/application.log");
+    //rayon init
+    let num_cpus = num_cpus::get();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_cpus)
+        .build_global()
+        .ok();
 
-    // let audio_files = audio::scan_audio().expect("TODO: panic message");
-    // if audio_files.is_empty() {
-    //     panic!("nothing found to start")
-    // }
-    // log::info!("total music found:{}", audio_files.len());
-    // database::create_tables().await;
-    // database::insert_audio_details(&audio_files).await;
-
+    audio::load_audio_on_startup().await;
     let _ = gui::init().await;
 
     // lets play song here
 
-    // let stream_handle =
-    //     rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
-    // let file =
-    //     File::open("C:\\Users\\mechanic\\Downloads\\divide-ed-sheeran\\07 Happier.mp3").unwrap();
-    // let _sink = rodio::play(&stream_handle.mixer(), file).unwrap();
+    let stream_handle =
+        rodio::OutputStreamBuilder::open_default_stream().expect("open default audio stream");
+    let file =
+        File::open("C:\\Users\\mechanic\\Downloads\\divide-ed-sheeran\\07 Happier.mp3").unwrap();
+    let _sink = rodio::play(&stream_handle.mixer(), file).unwrap();
 
-    // std::thread::sleep(std::time::Duration::from_secs(100));
+    std::thread::sleep(std::time::Duration::from_secs(100));
 }

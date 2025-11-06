@@ -7,7 +7,7 @@ use crossterm::{
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
 };
@@ -16,7 +16,7 @@ use crate::gui::control::SelectedArea;
 use crate::gui::control::handel_controls;
 use crate::gui::song_area::song_area;
 use crate::gui::song_tab::SelectedTab;
-use crate::gui::{control, play_area::play_area};
+use crate::gui::{CRITERIA, control, play_area::play_area};
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::style::Modifier;
 use ratatui::style::palette::tailwind::SLATE;
@@ -42,11 +42,14 @@ pub async fn init() -> Result<()> {
 pub struct AppState {
     pub should_exit: bool,
     pub is_playing: bool,
+    pub show_popup: bool,
+    pub search_input: String,
+    pub search_cursor: usize,
     pub selected_area: SelectedArea,
     pub music_filter_type: Vec<String>,
     pub music_filter_type_index: usize,
     pub selected_tab: SelectedTab,
-    pub selected_music_index: usize
+    pub selected_music_index: usize,
 }
 
 fn init_terminal() -> Result<DefaultTerminal> {
@@ -65,22 +68,18 @@ fn restore_terminal() -> Result<()> {
 }
 
 fn run(mut app: DefaultTerminal) -> Result<()> {
+    let music_criteria = CRITERIA::get_all_criteria();
     let mut application_state = AppState {
         selected_tab: SelectedTab::Tab1,
         selected_area: SelectedArea::LeftArea,
         is_playing: false,
+        search_cursor: 0,
+        show_popup: false,
+        search_input: "".to_string(),
         should_exit: false,
-        music_filter_type: vec![
-            "All".to_string(),
-            "Artist".to_string(),
-            "Album".to_string(),
-            "Playlist".to_string(),
-            "Year".to_string(),
-            "Genre".to_string(),
-            "Unknown".to_string(),
-        ],
+        music_filter_type: music_criteria,
         music_filter_type_index: 0,
-        selected_music_index:0
+        selected_music_index: 0,
     };
     while !application_state.should_exit {
         app.draw(|f| render_frame(f, &mut application_state))?;
@@ -122,8 +121,42 @@ fn render_frame(frame: &mut Frame, app: &mut AppState) {
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
         .split(frame.area());
+    log::info!("current opo status  render {}", app.show_popup);
+    if app.show_popup == true {
+        draw_search_popup(frame, app, frame.area());
+    }
+
     render_left(frame, inner_layout[0], &app);
-    render_right(frame, inner_layout[1], &app);
+    render_right(frame, inner_layout[1], app);
+}
+
+fn draw_search_popup(frame: &mut Frame<'_>, app: &mut AppState, area: Rect) {
+    if app.show_popup == false {
+        return;
+    }
+    let popup_area = Rect {
+        x: area.width / 4,
+        y: area.height / 3,
+        width: area.width / 2,
+        height: 3,
+    };
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Search (Press Enter to Search, Esc to Cancel)")
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+
+    let before_cursor = &app.search_input[..app.search_cursor.min(app.search_input.len())];
+    let after_cursor = &app.search_input[app.search_cursor.min(app.search_input.len())..];
+    let input_line = Line::from(vec![
+        Span::raw(before_cursor),
+        Span::styled("|", Style::default().fg(Color::White)), // cursor
+        Span::raw(after_cursor),
+    ]);
+
+    let paragraph = Paragraph::new(input_line).block(block);
+
+    frame.render_widget(paragraph, popup_area);
 }
 
 fn render_left(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
@@ -179,7 +212,7 @@ fn render_left(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
     );
 }
 
-fn render_right(f: &mut Frame<'_>, frame: Rect, app: &AppState) {
+fn render_right(f: &mut Frame<'_>, frame: Rect, app: &mut AppState) {
     let selected = &app.music_filter_type[app.music_filter_type_index];
     let content = format!("Details for {}\n\nThis is where more info goes.", selected);
 

@@ -8,6 +8,7 @@ use ratatui::text::Line;
 use std::path::PathBuf;
 
 use crate::audio::{AudioDetails, AudioType};
+use crate::gui::gui::AppState;
 use crate::gui::song_view::SongView;
 use ratatui::widgets::StatefulWidget;
 use ratatui::widgets::{Block, Borders, ListState, Padding, Paragraph};
@@ -22,14 +23,15 @@ pub enum SelectedTab {
     Tab2,
 }
 
-impl Widget for SelectedTab {
-    fn render(self, area: Rect, buf: &mut Buffer)
+impl StatefulWidget for SelectedTab {
+    type State = AppState;
+    fn render(self, area: Rect, buf: &mut Buffer, app_state: &mut Self::State)
     where
         Self: Sized,
     {
         match self {
-            Self::Tab1 => self.render_tab0(area, buf),
-            Self::Tab2 => self.render_tab1(area, buf),
+            Self::Tab1 => self.render_tab0(area, buf, app_state),
+            Self::Tab2 => self.render_tab1(area, buf, app_state),
         }
     }
 }
@@ -56,11 +58,11 @@ impl SelectedTab {
             .into()
     }
 
-    pub fn render_tab0(self, area: Rect, buf: &mut Buffer) {
+    pub fn render_tab0(self, area: Rect, buf: &mut Buffer, app_state: &mut AppState) {
         let songs = get_dummy_audio_details();
         let song_view: SongView = SongView::new(&songs, 0);
         let mut list_state = ListState::default();
-        list_state.select(Some(0));
+        list_state.select(Some(app_state.selected_music_index));
         song_view.render(area, buf, &mut list_state);
         // Paragraph::new("i will put all songs here ")
         //     .block(Block::default().title("songs").borders(Borders::ALL))
@@ -68,7 +70,7 @@ impl SelectedTab {
         //     .render(area, buf);
     }
 
-    pub fn render_tab1(self, area: Rect, buf: &mut Buffer) {
+    pub fn render_tab1(self, area: Rect, buf: &mut Buffer, app_state: &mut AppState) {
         Paragraph::new("try to do http call to get the lyrics")
             .block(Block::default().title("lyrics").borders(Borders::ALL))
             .style(Style::default().fg(Color::White))

@@ -127,7 +127,7 @@ fn render_progressbar(f: &mut Frame, area: Rect, app: &AppState) {
     f.render_widget(gauge, area);
 }
 
-fn title_block(title: &str) -> Block {
+fn title_block(title: &str) -> Block<'_> {
     let title = Line::from(title).left_aligned();
     Block::new()
         .borders(Borders::ALL)

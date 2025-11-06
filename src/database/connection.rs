@@ -3,9 +3,6 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
 use std::{str::FromStr, time::Duration};
-use tokio::sync::OnceCell;
-
-static DB_CONN: OnceCell<Pool<Sqlite>> = OnceCell::const_new();
 
 pub async fn db_conn() -> Result<Pool<Sqlite>, Error> {
     let db_url = "sqlite://main.db";

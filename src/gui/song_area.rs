@@ -6,7 +6,7 @@ use ratatui::prelude::Color;
 use ratatui::widgets::{Block, Borders, Tabs, Widget};
 use strum::IntoEnumIterator;
 
-pub fn song_area(f: &mut Frame, area: Rect, app: &AppState) {
+pub fn song_area(f: &mut Frame, area: Rect, app: &mut AppState) {
     //create tabs
     let titles = SelectedTab::iter().map(SelectedTab::title);
     let highlight_style = (Color::Black, Color::White);
@@ -21,11 +21,14 @@ pub fn song_area(f: &mut Frame, area: Rect, app: &AppState) {
     //     .direction(Direction::Vertical)
     //     .constraints(vec![Constraint::Percentage(100)])
     //     .split(area);
-    log::info!("Tabs: {:?}", tabs);
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
         .split(area);
+    for i in 1..100 {
+        for i in 1..100 {}
+    }
     f.render_widget(tabs, layout[0]);
-    app.selected_tab.render(layout[1], f.buffer_mut());
+    f.render_stateful_widget(app.selected_tab, layout[1], app);
+    // app.selected_tab.render_stateful_widget(layout[1], f.buffer_mut(),app);
 }

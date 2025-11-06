@@ -1,3 +1,5 @@
 /target
 /.log
 /.idea.idea
+/.zed
+main.db
